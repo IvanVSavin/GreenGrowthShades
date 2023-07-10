@@ -1,0 +1,1754 @@
+---
+title: "Shades of green growth scepticism among climate policy researchers"
+author: "Ivan Savin"
+date: "10/07/2022"
+output: word_document
+
+---
+
+<style type="text/css">
+body, td {
+   font-size: 20px;
+}
+code.r{ / Code block /
+    font-size: 6px;
+}
+</style>
+
+```{r echo=FALSE}
+rm(list=ls())
+setwd("D:/Projects/2_Working Papers/Scientific survey")#D:/Scientific survey
+sapply(c("magrittr", "data.table", 'plyr','dplyr', 'ggplot2', 'cluster','knitr', 'dendextend','pkgbuild','devtools','R.methodsS3','stm','ngram','matrixStats','corrplot','ggpubr','wordcloud','readxl','tm'), require, character.only = T)
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+library(webshot)
+#webshot::install_phantomjs()
+
+knitr::opts_chunk$set(fig.width=7, fig.height=5,dpi=300) #10 15
+
+data<-read.csv('540850-data-data_spellcorrect_newclass.csv', header=T, sep=',')
+data<-data[1:789,]
+#table(data$Primary_research_field)
+
+data$Primary_research_field[which(data$Primary_research_field=="Environmental economics")]<-"Env. economics"
+data$Primary_research_field[which(data$Primary_research_field=="Ecological economics")]<-"Ecol. economics"
+data$Primary_research_field[which(data$Primary_research_field=="Economics (other areas)")]<-"Oth. economics"
+data$Primary_research_field[which(data$Primary_research_field=="Engineering")]<-"Engineering"
+data$Primary_research_field[which(data$Primary_research_field=="Geography")]<-"Geography"
+data$Primary_research_field[which(data$Primary_research_field=="Agri/forest")]<-"Agri./forestry"
+data$Primary_research_field[which(data$Primary_research_field=="Law")]<-"Law"
+data$Primary_research_field[which(data$Primary_research_field=="Mathematics and computer sciences")]<-"Math & comp. sci."
+data$Primary_research_field[which(data$Primary_research_field=="Natural science (Atmospheric, Climate, etc.)")]<-"Natural sci."
+data$Primary_research_field[which(data$Primary_research_field=="Political science")]<-"Political sci."
+data$Primary_research_field[which(data$Primary_research_field=="Psychology")]<-"Psychology"
+data$Primary_research_field[which(data$Primary_research_field=="Sociology")]<-"Sociology"
+data$Primary_research_field[which(data$Primary_research_field=="Sustainability transition studies")]<-"Sust. transition"
+data$Primary_research_field[which(data$Primary_research_field=="Oth Env Soc Sci")]<-"Oth. env. soc. sci."
+data$Primary_research_field[which(data$Primary_research_field=="Industrial ecology")]<-"Ind. ecology"
+
+
+listcountries<-read.csv('list of countries_2.csv', header=T, sep=',')
+
+data$country_residence[c(6,8,14,23,25,38)]<-186
+data$country_residence[c(211,224)]<-6
+listcountries$IMF.GDPpc <- gsub(",", "", listcountries$IMF.GDPpc)
+
+
+setwd("D:/Projects/2_Working Papers/Scientific survey/GrADe cluster")#D:/Scientific survey
+listcountries2<-read.csv('GDP data.csv', header=T, sep=',')
+listcountries_gini<-read.csv('Gini coef.csv', header=T, sep=',')
+# put in column res the last non-NA value https://stackoverflow.com/questions/33664659/extract-last-non-missing-value-in-row-with-data-table
+listcountries_gini<-as.data.table(listcountries_gini)
+listcountries_gini[, res := NA_character_]
+for (v in rev(names(listcountries_gini))[-1]) listcountries_gini[is.na(res), res := get(v)]
+listcountries_HDI<-read.csv('HDR21-22_Statistical_Annex_I-HDI_Table.csv', header=T, sep=',')
+
+
+listcountries2$Country<- gsub("Bosnia and Herzegovina", "Bosnia and Herzegovia", listcountries2$Country)
+listcountries2$Country<- gsub("Brunei Darussalam", "Brunei", listcountries2$Country)
+listcountries2$Country<- gsub("Democratic Republic of the Congo", "Dem Republic of Congo", listcountries2$Country)
+listcountries2$Country<- gsub("Cфte d'Ivoire", "Cote d'Ivoire", listcountries2$Country)
+listcountries2$Country<- gsub("The Gambia", "Gambia", listcountries2$Country)
+listcountries2$Country<- gsub("Islamic Republic of Iran", "Iran", listcountries2$Country)
+listcountries2$Country<- gsub("Israel", "Isreal", listcountries2$Country)
+listcountries2$Country<- gsub("Korea", "South Korea", listcountries2$Country)
+listcountries2$Country<- gsub("Kyrgyz Republic", "Kyrgyzstan", listcountries2$Country)
+listcountries2$Country<- gsub("Lao P.D.R.", "Laos", listcountries2$Country)
+listcountries2$Country<- gsub("Myanmar", "Myanmar (Burma)", listcountries2$Country)
+listcountries2$Country<- gsub("Slovak Republic", "Slovakia", listcountries2$Country)
+listcountries2$Country<- gsub("Solomon Islands", "Sololon Islands", listcountries2$Country)
+listcountries2$Country<- gsub("Taiwan Province of China", "Taiwan", listcountries2$Country)
+listcountries2$Country<- gsub("Tьrkiye", "Turkey", listcountries2$Country)
+listcountries2$Country<- gsub("United States", "United States of America", listcountries2$Country)
+
+
+listcountries_gini$Country.Name<- gsub("Bosnia and Herzegovina", "Bosnia and Herzegovia", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Brunei Darussalam", "Brunei", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Congo, Dem. Rep.", "Dem Republic of Congo", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Cфte d'Ivoire", "Cote d'Ivoire", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Gambia, The", "Gambia", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Iran, Islamic Rep.", "Iran", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Israel", "Isreal", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Korea, Rep.", "South Korea", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Kyrgyz Republic", "Kyrgyzstan", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Lao PDR", "Laos", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Myanmar", "Myanmar (Burma)", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Slovak Republic", "Slovakia", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Solomon Islands", "Sololon Islands", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Taiwan Province of China", "Taiwan", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Turkiye", "Turkey", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("United States", "United States of America", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Bahamas, The", "The Bahamas", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Congo, Rep.", "Republic of Congo", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Czechia", "Czech Republic", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Egypt, Arab Rep.", "Egypt", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Micronesia, Fed. Sts.", "Micronesia", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Russian Federation", "Russia", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Syrian Arab Republic", "Syria", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Venezuela, RB", "Venezuela", listcountries_gini$Country.Name)
+listcountries_gini$Country.Name<- gsub("Yemen, Rep.", "Yemen", listcountries_gini$Country.Name)
+
+
+
+listcountries_HDI$Country<- gsub("Bahamas", "The Bahamas", listcountries_HDI$Country)
+#listcountries_HDI$Country<- gsub("Bolivia (Plurinational State of)", "Bolivia", listcountries_HDI$Country)
+listcountries_HDI$Country<- gsub("Bosnia and Herzegovina", "Bosnia and Herzegovia", listcountries_HDI$Country)
+listcountries_HDI$Country<- gsub("Brunei Darussalam", "Brunei", listcountries_HDI$Country)
+#listcountries_HDI$Country<- gsub("Congo (Democratic Republic of the)", "Dem Republic of Congo", listcountries_HDI$Country)
+listcountries_HDI$Country<- gsub("Israel", "Isreal",listcountries_HDI$Country)
+#listcountries_HDI$Country<- gsub("Micronesia (Federated States of)", "Micronesia", listcountries_HDI$Country)
+
+
+junk<-list()
+junk$Country<-listcountries2$Country[which(listcountries2$Units=="U.S. dollars")]
+junk$GDPpc_current<-listcountries2$X2021[which(listcountries2$Units=="U.S. dollars")]
+junk$GDPpc_PPP<-listcountries2$X2021[which(listcountries2$Units=="Purchasing power parity; international dollars")]
+
+listcountries$GDPpc_current<-matrix(NA,length(listcountries$Country),1)
+listcountries$GDPpc_PPP<-matrix(NA,length(listcountries$Country),1)
+listcountries$Gini<-matrix(NA,length(listcountries$Country),1)
+listcountries$HDI<-matrix(NA,length(listcountries$Country),1)
+
+seq<-1:length(listcountries$Country)
+for (i in seq[c(-43,-50,-90,-101,-116,-146,-147,-148,-151,-190,-196)]){
+#print(listcountries$Country[i])
+listcountries$GDPpc_current[i]<-junk$GDPpc_current[which(junk$Country==listcountries$Country[i])]
+# print(junk$Country[which(junk$Country==listcountries$Country[i])])
+listcountries$GDPpc_PPP[i]<-junk$GDPpc_PPP[which(junk$Country==listcountries$Country[i])]
+}
+for (i in seq[c(-43,-50,-90,-101,-116,-146,-147,-148,-150,-152,-157,-132,-134,-142,-126,-68,-93,-100,-48,-54,-55,-24,-29,-1,-4,-5,-11,-12,-151,-171,-190,-196)]){
+#print(listcountries$Country[i])
+listcountries$Gini[i]<-listcountries_gini$res[which(listcountries_gini$Country.Name==listcountries$Country[i])]
+}
+
+for (i in seq[c(-50,-57,-90,-92,-116,-123,-161,-171,-190,-196)]){
+#print(listcountries$Country[i])
+listcountries$IHDI[i]<-listcountries_HDI$IHDI[which(listcountries_HDI$Country==listcountries$Country[i])]
+}
+
+
+
+listcountries$GDPpc_current <- gsub(",", "", listcountries$GDPpc_current)
+listcountries$GDPpc_PPP <- gsub(",", "", listcountries$GDPpc_PPP)
+
+listcountries$IMF.GDPpc<-as.numeric(listcountries$IMF.GDPpc)
+listcountries$GDPpc_current<-as.numeric(listcountries$GDPpc_current)
+listcountries$GDPpc_PPP<-as.numeric(listcountries$GDPpc_PPP)
+listcountries$Gini<-as.numeric(listcountries$Gini)
+listcountries$IHDI<-as.numeric(listcountries$IHDI)
+
+summary(listcountries)
+
+data$countryresGDPpc<-matrix(0,length(data$country_residence),1)
+data$countryoriGDPpc<-matrix(0,length(data$country_residence),1)
+data$countryresGDPpc_current<-matrix(0,length(data$country_residence),1)
+data$countryoriGDPpc_current<-matrix(0,length(data$country_residence),1)
+data$countryresGDPpc_PPP<-matrix(0,length(data$country_residence),1)
+data$countryoriGDPpc_PPP<-matrix(0,length(data$country_residence),1)
+data$countryoriGini<-matrix(0,length(data$country_residence),1)
+data$countryresGini<-matrix(0,length(data$country_residence),1)
+data$countryoriIHDI<-matrix(0,length(data$country_residence),1)
+data$countryresIHDI<-matrix(0,length(data$country_residence),1)
+
+data$countryoriGDPpc[which(data$country_origin==1)]<-listcountries$IMF.GDPpc[data$country_residence[which(data$country_origin==1)]]
+data$countryoriGDPpc_current[which(data$country_origin==1)]<-listcountries$GDPpc_current[data$country_residence[which(data$country_origin==1)]]
+data$countryoriGDPpc_PPP[which(data$country_origin==1)]<-listcountries$GDPpc_PPP[data$country_residence[which(data$country_origin==1)]]
+data$countryoriGini[which(data$country_origin==1)]<-listcountries$Gini[data$country_residence[which(data$country_origin==1)]]
+data$countryoriIHDI[which(data$country_origin==1)]<-listcountries$IHDI[data$country_residence[which(data$country_origin==1)]]
+
+
+for (i in 1:196){
+data$countryresGDPpc[which(data$country_residence==i)]<-listcountries$IMF.GDPpc[i]
+data$countryresGDPpc_current[which(data$country_residence==i)]<-listcountries$GDPpc_current[i]
+data$countryresGDPpc_PPP[which(data$country_residence==i)]<-listcountries$GDPpc_PPP[i]
+data$countryresGini[which(data$country_residence==i)]<-listcountries$Gini[i]
+data$countryresIHDI[which(data$country_residence==i)]<-listcountries$IHDI[i]
+
+data$country_residence[which(data$country_residence==i)]<-listcountries$Country[i]
+}
+  
+data$country_origin[which(data$country_origin==1)]<-data$country_residence[which(data$country_origin==1)]
+
+for (i in 2:197){
+data$countryoriGDPpc[which(data$country_origin==i)]<-listcountries$IMF.GDPpc[i-1]
+data$countryoriGDPpc_current[which(data$country_origin==i)]<-listcountries$GDPpc_current[i-1]
+data$countryoriGDPpc_PPP[which(data$country_origin==i)]<-listcountries$GDPpc_PPP[i-1]
+data$countryoriGini[which(data$country_origin==i)]<-listcountries$Gini[i-1]
+data$countryoriIHDI[which(data$country_origin==i)]<-listcountries$IHDI[i-1]
+data$country_origin[which(data$country_origin==i)]<-listcountries$Country[i-1]
+}
+
+
+
+
+data$politics[which(data$politics==99)]<-NA
+
+data$climate_worry[which(data$climate_worry==99)]<-NA
+
+data$GEM_1[which(data$GEM_1==8)]<-NA
+data$GEM_2[which(data$GEM_2==8)]<-NA
+data$GEM_3[which(data$GEM_3==8)]<-NA
+
+data$criteria_1[which(data$criteria_1==6)]<-NA
+data$criteria_2[which(data$criteria_2==6)]<-NA
+data$criteria_3[which(data$criteria_3==6)]<-NA
+data$criteria_4[which(data$criteria_4==6)]<-NA
+data$criteria_5[which(data$criteria_5==6)]<-NA
+
+for (ic in 27:57){
+  data[which(data[,ic]==4),ic]<-NA
+}
+
+for (ic in 60:66){
+  data[which(data[,ic]==6),ic]<-NA
+}
+
+colnames(data)[60:66]<-c("importantpolicies_1","importantpolicies_2","importantpolicies_3","importantpolicies_4","importantpolicies_5","importantpolicies_6","importantpolicies_7")
+
+```
+
+The average (median) length of the interview was 146 (21) minutes. Mainly because of a few outliers exceeding one million seconds(!)
+
+Environmental economists and natural scientist are the most popular fields  of research for people participated in the survey.
+
+Majority of our sample respondents are male, with mean (median) of 19 (15) years of research experience. majority of respondents tend to have leftish political views.
+
+Scientists are mostly very or extremely concerned about climate change
+
+Few countries (US, Germany, UK) as expected logically dominate among the places of residence and origin. 
+
+I also cluster respondents. As 20 people answered "dont know" to at least 1 out of 3 statements, the sample here is reduced from 789 to 769 observations. Note that all there clustering methods (kmeans, hierarchical clustering and LCA speak for 3 clusters).
+
+The number of Greengrowth opinions is 208 out of 769, Agrowth - 343 out of 769 and Degrowth - 218 out of 769.
+Males tend to have more leftish political views and degrowth opinion. Research experience and length of interview do not show large correlations
+
+It is interesting that Green Growth views are much more concentrated in China, Greece and Nigeria, while almost absent in Sweden and Spain.
+As for disciplines, Degrowth is stronger present in EcoEco, Law, Psychology and Sociology (see also regression result)
+
+```{r, echo=FALSE}
+summary(data)
+#head(data)
+summary(data$LENGTH_OF_INTERVIEW)
+# 
+# data$LENGTH_OF_INTERVIEW[which(data$LENGTH_OF_INTERVIEW==max(data$LENGTH_OF_INTERVIEW))]<-NA
+# summary(data$LENGTH_OF_INTERVIEW)
+
+par(mfrow = c(1,1) ,mar=c(10,4,1,2))
+
+plot(table(data$Primary_research_field),ylab="Frequency Research field",las=2)
+table(data$Primary_research_field)
+
+plot(table(data$country_residence),ylab="Frequency Residence",cex.axis = .35,las=2)
+plot(table(data$country_origin),ylab="Frequency Origin",cex.axis = .35,las=2)
+
+sort(table(data$country_residence),decreasing = TRUE)
+sort(table(data$country_origin),decreasing = TRUE)
+
+par(mfrow = c(1,1) ,mar=c(4,4,1,2))
+
+summary(data$research_experience_1)
+hist(data$research_experience_1,ylab="",main="Years of research experience", breaks = 50)
+
+hist(data$gender, main="Gender distribution", xaxt="n", xlab="")
+axis(1, at=c(1,2,3), labels=c("Female","Male", "Other")) 
+
+par(mfrow = c(1,1) ,mar=c(7,4,1,2))
+hist(data$climate_worry, main="Climate Concern",  breaks=c(0,1,2,3,4,5,6,7,8,9), xaxt="n", xlab="")
+axis(1, at=c(.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5), labels=c("Not at all","","A bit","","Somewhat","","Very","","Extremely much"),las=2)
+
+par(mfrow = c(1,1) ,mar=c(7,4,1,2))
+hist(data$politics, main="",  breaks=c(0,1,2,3,4,5,6,7,8,9,10,11), xaxt="n", xlab="")
+axis(1, at=c(.5,1.5,2.5,3.5,4.5,5.5,6.5,7.5,8.5,9.5,10.5), labels=c("1 left-wing","2","3","4","5","6","7","8","9","10","11 right-wing"),las=2)
+
+data_clust<-data[-c(which(is.na(data[,86])),which(is.na(data[,87])),which(is.na(data[,88]))),c(1,86:88)]
+#elbow method to decide how many clusters we need
+set.seed(0123)
+inter <- c()
+for (i in 1:10) {
+  inter <- c(inter, kmeans(data_clust[,2:4],i)$tot.withinss)
+  
+}
+# plot(1:i, inter, type = "b")
+# (inter / inter[1]) %>% diff(1) * 100
+# lines(c(2,10), inter[c(2,10)], col = "blue")
+# lines(c(3,10), inter[c(3,10)], col = "blue")
+# lines(c(4,10), inter[c(4,10)], col = "blue")
+# lines(c(5,10), inter[c(5,10)], col = "blue")
+# lines(c(6,10), inter[c(6,10)], col = "blue")
+# lines(c(7,10), inter[c(7,10)], col = "blue")
+# lines(c(8,10), inter[c(8,10)], col = "blue")
+# lines(c(9,10), inter[c(9,10)], col = "blue")
+
+#seems like we have elbow at 2, but more interested in 4 clusters
+
+kmeans <- kmeans(data_clust[2:4], 3)
+centers <- kmeans$centers
+#centers
+
+#table(kmeans$cluster) # more or less equally distributed 
+
+data_clust$cluster <- kmeans$cluster
+
+par(mfrow = c(1, 1) ,mar=c(2,2,2,2))
+
+data_clust_long<-reshape(data_clust, direction = "long", varying = names(data_clust)[2:4], idvar = "Response.ID", sep="_",timevar="Question")
+#plotting responses with respect to resulted clustering
+# p <- ggplot(data = data_clust_long, aes(x=Question, y=GEM)) + 
+#   geom_boxplot(aes(fill=as.factor(cluster)))  
+# p + facet_wrap( ~ Question, scales="free")+ 
+#   theme(axis.title.x=element_blank(),
+#         axis.text.x=element_blank(),
+#         axis.ticks.x=element_blank())
+
+
+
+
+###-----------Hierarchical clustering-----------------------------
+sum(is.na(data_clust))
+#str(data_clust[1:100,1:16])
+
+
+clust_dist <- dist(data_clust[,2:4], method='euclidian')
+hier_clust <- hclust(clust_dist, method='complete')
+
+library(stats)
+dist_dend <- as.dendrogram(hier_clust)
+#plot(dist_dend) 
+dend_col <- color_branches(dist_dend, k=3)
+#plot(dend_col)
+
+groups <- cutree(hier_clust, h = 9)
+
+#table(groups)
+data_clust_long$hgroups <- groups
+
+# #plotting responses with respect to resulted clustering
+# p <- ggplot(data = data_clust_long, aes(x=Question, y=GEM)) + 
+#   geom_boxplot(aes(fill=as.factor(hgroups)))  
+# p + facet_wrap( ~ Question, scales="free")+ 
+#   theme(axis.title.x=element_blank(),
+#         axis.text.x=element_blank(),
+#         axis.ticks.x=element_blank())
+
+
+
+library(poLCA)
+#?poLCA
+
+#FOLOWWING https://cran.r-project.org/web/packages/sBIC/vignettes/LatentClassAnalysis.pdf
+# and http://statistics.ohlsen-web.de/latent-class-analysis-polca/
+
+#data_clust$class_LCA<-index_i
+#data_clust<-data_clust[data_clust$class_LCA!=4,]
+#LCA is model-based. didn't know what model can fit here, so my suggestions are:
+colnames(data_clust)<-c("ID","GEM_LifeSatisfaction","GEM_DevelopmentSpace","GEM_EnvironmentalProtection")
+f<-with(data_clust, cbind(GEM_LifeSatisfaction,GEM_DevelopmentSpace,GEM_EnvironmentalProtection)~1) 
+
+set.seed(01012)
+lc1 <- poLCA(f, maxiter=1000, nclass=1, nrep=10, data=data_clust, verbose=FALSE)
+lc2 <- poLCA(f, maxiter=1000, nclass=2, nrep=10, data=data_clust, verbose=FALSE)
+lc3 <- poLCA(f, maxiter=1000, nclass=3, nrep=10, data=data_clust, verbose=FALSE)
+lc4 <- poLCA(f, maxiter=1000, nclass=4, nrep=10, data=data_clust, verbose=FALSE)
+lc5 <- poLCA(f, maxiter=1000, nclass=5, nrep=10, data=data_clust, verbose=FALSE)
+lc6 <- poLCA(f, maxiter=1000, nclass=6, nrep=10, data=data_clust, verbose=FALSE)
+lc7 <- poLCA(f, maxiter=1000, nclass=7, nrep=10, data=data_clust, verbose=FALSE)
+lc8 <- poLCA(f, maxiter=1000, nclass=8, nrep=10, data=data_clust, verbose=FALSE)
+lc9 <- poLCA(f, maxiter=1000, nclass=9, nrep=10, data=data_clust, verbose=FALSE)
+
+# generate dataframe with fit-values
+
+results <- data.frame(Modell=c("Modell 1"),
+                      log_likelihood=lc1$llik,
+                      df = lc1$resid.df,
+                      BIC=lc1$bic,
+                      ABIC=  (-2*lc1$llik) + ((log((lc1$N + 2)/24)) * lc1$npar),
+                      CAIC = (-2*lc1$llik) + lc1$npar * (1 + log(lc1$N)), 
+                      likelihood_ratio=lc1$Gsq)
+results$Modell<-as.integer(results$Modell)
+results[1,1]<-c("1 cluster")
+results[2,1]<-c("2 clusters")
+results[3,1]<-c("3 clusters")
+results[4,1]<-c("4 clusters")
+results[5,1]<-c("5 clusters")
+results[6,1]<-c("6 clusters")
+results[7,1]<-c("7 clusters")
+results[8,1]<-c("8 clusters")
+results[9,1]<-c("9 clusters")
+
+results[2,2]<-lc2$llik
+results[3,2]<-lc3$llik
+results[4,2]<-lc4$llik
+results[5,2]<-lc5$llik
+results[6,2]<-lc6$llik
+results[7,2]<-lc7$llik
+results[8,2]<-lc8$llik
+results[9,2]<-lc9$llik
+
+results[2,3]<-lc2$resid.df
+results[3,3]<-lc3$resid.df
+results[4,3]<-lc4$resid.df
+results[5,3]<-lc5$resid.df
+results[6,3]<-lc6$resid.df
+results[7,3]<-lc7$resid.df
+results[8,3]<-lc8$resid.df
+results[9,3]<-lc9$resid.df
+
+results[2,4]<-lc2$bic
+results[3,4]<-lc3$bic
+results[4,4]<-lc4$bic
+results[5,4]<-lc5$bic
+results[6,4]<-lc6$bic
+results[7,4]<-lc7$bic
+results[8,4]<-lc8$bic
+results[9,4]<-lc9$bic
+
+results[2,5]<-(-2*lc2$llik) + ((log((lc2$N + 2)/24)) * lc2$npar) #abic
+results[3,5]<-(-2*lc3$llik) + ((log((lc3$N + 2)/24)) * lc3$npar)
+results[4,5]<-(-2*lc4$llik) + ((log((lc4$N + 2)/24)) * lc4$npar)
+results[5,5]<-(-2*lc5$llik) + ((log((lc5$N + 2)/24)) * lc5$npar)
+results[6,5]<-(-2*lc6$llik) + ((log((lc6$N + 2)/24)) * lc6$npar)
+results[7,5]<-(-2*lc7$llik) + ((log((lc7$N + 2)/24)) * lc7$npar) 
+results[8,5]<-(-2*lc8$llik) + ((log((lc8$N + 2)/24)) * lc8$npar) 
+results[9,5]<-(-2*lc9$llik) + ((log((lc9$N + 2)/24)) * lc9$npar) 
+
+results[2,6]<- (-2*lc2$llik) + lc2$npar * (1 + log(lc2$N)) #caic
+results[3,6]<- (-2*lc3$llik) + lc3$npar * (1 + log(lc3$N))
+results[4,6]<- (-2*lc4$llik) + lc4$npar * (1 + log(lc4$N))
+results[5,6]<- (-2*lc5$llik) + lc5$npar * (1 + log(lc5$N))
+results[6,6]<- (-2*lc6$llik) + lc6$npar * (1 + log(lc6$N))
+results[7,6]<- (-2*lc7$llik) + lc7$npar * (1 + log(lc7$N))
+results[8,6]<- (-2*lc8$llik) + lc8$npar * (1 + log(lc8$N))
+results[9,6]<- (-2*lc9$llik) + lc9$npar * (1 + log(lc9$N))
+
+results[2,7]<-lc2$Gsq
+results[3,7]<-lc3$Gsq
+results[4,7]<-lc4$Gsq
+results[5,7]<-lc5$Gsq
+results[6,7]<-lc6$Gsq
+results[7,7]<-lc7$Gsq
+results[8,7]<-lc8$Gsq
+results[9,7]<-lc9$Gsq
+
+
+entropy<-function (p) sum(-p*log(p))
+
+results$R2_entropy
+results[1,8]<-c("-")
+
+error_prior<-entropy(lc2$P) # class proportions model 2
+error_post<-mean(apply(lc2$posterior,1, entropy),na.rm = TRUE)
+results[2,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc3$P) # class proportions model 3
+error_post<-mean(apply(lc3$posterior,1, entropy),na.rm = TRUE)
+results[3,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc4$P) # class proportions model 4
+error_post<-mean(apply(lc4$posterior,1, entropy),na.rm = TRUE)
+results[4,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc5$P) # class proportions model 5
+error_post<-mean(apply(lc5$posterior,1, entropy),na.rm = TRUE)
+results[5,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc6$P) # class proportions model 6
+error_post<-mean(apply(lc6$posterior,1, entropy),na.rm = TRUE)
+results[6,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc7$P) # class proportions model 6
+error_post<-mean(apply(lc7$posterior,1, entropy),na.rm = TRUE)
+results[7,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc8$P) # class proportions model 6
+error_post<-mean(apply(lc8$posterior,1, entropy),na.rm = TRUE)
+results[8,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc9$P) # class proportions model 6
+error_post<-mean(apply(lc9$posterior,1, entropy),na.rm = TRUE)
+results[9,8]<-round(((error_prior-error_post) / error_prior),3)
+
+# combining results to a dataframe
+colnames(results)<-c("Model","log-likelihood","resid. df","BIC","aBIC","cAIC","likelihood-ratio","Entropy")
+lca_results<-results
+
+#results
+
+
+
+
+
+# ELBOW DIAGRAM
+
+# Order categories of results$model in order of appearance
+#install.packages("forcats")
+library("forcats")
+#results$model < - as_factor(results$model) 
+
+#convert to long format
+results2<-tidyr::gather(results,Kriterium,Guete,4:6)
+#results2
+
+#plot 
+fit.plot<-ggplot(results2) + 
+  geom_point(aes(x=Model,y=Guete),size=3) +
+  geom_line(aes(Model, Guete, group = 1)) +
+  theme_bw()+
+  labs(x = "", y="", title = "") + 
+  facet_grid(Kriterium ~. ,scales = "free") +
+  theme_bw(base_size = 16, base_family = "") +   
+  theme(panel.grid.major.x = element_blank() ,
+        panel.grid.major.y = element_line(colour="grey", size=0.5),
+        legend.title = element_text(size = 16, face = 'bold'),
+        axis.text = element_text(size = 12),
+        axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+        axis.title = element_text(size = 16),
+        legend.text=  element_text(size=16),
+        axis.line = element_line(colour = "black")) # Achsen etwas dicker
+
+# save 650 x 800
+fit.plot
+
+
+
+
+#Assume that we stick to x classes, show their size
+round(colMeans(lc3$posterior)*100,2)
+index_i<-apply(lc3$posterior, 1, which.max)# find for each id, the  identified class
+
+#index_i[index_i==1]<-5
+#table(index_i)
+data_clust$class_LCA<-index_i
+
+data_clust$class_LCA[index_i==1]<-2
+data_clust$class_LCA[index_i==2]<-1
+data_clust$class_LCA[index_i==3]<-3
+#data_clust$class_LCA[index_i==4]<-"cluster4PubSur"
+table(index_i)
+
+
+data_clust_long<-reshape(data_clust, direction = "long", varying = names(data_clust)[2:4], idvar = "Response.ID", sep="_",timevar="Question")
+#plotting responses with respect to resulted clustering
+p <- ggplot(data = data_clust_long, aes(x=Question, y=GEM)) + 
+  geom_boxplot(aes(fill=as.factor(class_LCA)))  
+p + facet_wrap( ~ Question, scales="free")+  
+  scale_fill_manual(values=c("limegreen","cyan","magenta"),  name="", breaks=c("1","2","3"),
+                    labels=c("Green growth", "Agrowth","Degrowth"))+ 
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        legend.position="bottom")
+
+
+data$GEMcluster<-matrix(NA,length(data$STATUS),1)
+
+  
+  data$GEMcluster[data$CID %in% data_clust$ID]<-data_clust$class_LCA[data_clust$ID %in% data$CID]
+  summary(data$GEMcluster)
+  data<-data[-which(is.na(data$GEMcluster)),]
+
+data$GEMcluster<-as.factor(data$GEMcluster)
+
+m_change <- polr(GEMcluster ~   Primary_research_field+1 
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+library("forcats")
+library(DescTools)
+PseudoR2(m_change,which="Nagelkerke")
+
+data$GEMcluster<-as.numeric(data$GEMcluster)
+m_change <- lm(GEMcluster ~   Primary_research_field 
+                 , data = data)
+summary(m_change)
+
+DataCorrplot<-data[,c(6,20:23,60:65,85,89,90,96,102)]
+colnames(DataCorrplot)<-c( "LENGTH OF INTERVIEW","importance of effectiveness" ,"importance of efficiency","importance of equity","importance of feasibility","importance of direct regulation",   "importance of carbon tax","importance of cap and trade", "importance of adoption subsidies","importance of innovation support","importance of info provision", "climate_worry","research_experience_1","gender","politics","GEMcluster")
+library(tidyverse)
+
+DataCorrplot<-drop_na(DataCorrplot)
+
+par(mfrow = c(1, 1) ,mar=c(1,1,1,2))
+M <- cor(DataCorrplot)
+
+#corrplot(M, method = "circle",tl.cex=.9,tl.col = "black",col=colorRampPalette(c("blue","white","red"))(200))
+
+
+
+testRes = cor.mtest(DataCorrplot, conf.level = 0.95)
+corrplot(M, p.mat = testRes$p, method = 'circle', insig='blank',col.lim = c(-1, 1),tl.cex=.7,tl.col="black",
+          diag = FALSE,col=colorRampPalette(c("blue","white","red"))(200))$corrPos -> p1
+p1<-p1[which(p1$p.value<0.05),]
+text(p1$x, p1$y, round(p1$corr, 2),cex=.5)
+```
+
+
+It is interesting that Green Growth views are much more concentrated in China, Greece and Nigeria, while almost absent in Sweden and Spain
+
+Political Scientists are concentrated on Agrowth, Eco economists and psychology are more in degrowth
+
+In other words, the richer is the country the scientist is residing in or originates from, the more likely he is of Degrowth opinion. Worth mentioning that the country of origin is considerably more important than the residence.
+
+GEMcluster is a variable with 1 for Green growth, 2 Agrwoth and 3 Degrowth.
+While GEM_GGrowth, GEM_AGrowth and GEM_DGrowth are dummy variables for respective clusters
+
+```{r, echo=FALSE}
+data$GEM_GGrowth<-matrix(0,length(data$STATUS),1)
+data$GEM_GGrowth[which(data$GEMcluster==1)]<-1
+
+data$GEM_AGrowth<-matrix(0,length(data$STATUS),1)
+data$GEM_AGrowth[which(data$GEMcluster==2)]<-1
+
+data$GEM_DGrowth<-matrix(0,length(data$STATUS),1)
+data$GEM_DGrowth[which(data$GEMcluster==3)]<-1
+
+
+# cor.test(data$GEMcluster,data$countryresGDPpc)
+# cor.test(data$GEMcluster,data$countryoriGDPpc)
+# 
+# cor.test(data$GEM_GGrowth,data$countryresGDPpc)
+# cor.test(data$GEM_GGrowth,data$countryoriGDPpc)
+# 
+# cor.test(data$GEM_AGrowth,data$countryresGDPpc)
+# cor.test(data$GEM_AGrowth,data$countryoriGDPpc)
+# 
+# cor.test(data$GEM_DGrowth,data$countryresGDPpc)
+# cor.test(data$GEM_DGrowth,data$countryoriGDPpc)
+
+library(gridExtra)
+library(grid)
+library(ggplot2)
+library(lattice)
+ggplot(data, aes(x=countryoriGDPpc, y=GEMcluster) )+ geom_point()  +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon")+
+  scale_fill_distiller(palette=1, direction=1) +
+  geom_smooth(method = "lm", se = FALSE,colour="red")+
+  #ylim(0,250)+
+  #scale_alpha_continuous(limits=c(0.001,0.02))+
+  scale_alpha_continuous(limits=c(0.001,0.02))+ labs(fill = "density", title="")+xlab("GDP per capita in country of origin")+ylab("Position in the growth-vs-environment debate")
+
+
+linearMod <- lm(GEMcluster ~ countryoriGDPpc_current  , data=data)
+summary(linearMod)
+
+
+logitMod <- glm(GEM_GGrowth ~ countryoriGDPpc_current, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_AGrowth ~ countryoriGDPpc_current, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_DGrowth ~ countryoriGDPpc_current, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+ggplot(data, aes(x=countryresGDPpc, y=GEMcluster) )+ geom_point()  +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon")+
+  scale_fill_distiller(palette=1, direction=1) +
+  geom_smooth(method = "lm", se = FALSE,colour="red")+
+  #ylim(0,250)+
+  #scale_alpha_continuous(limits=c(0.001,0.02))+
+  scale_alpha_continuous(limits=c(0.001,0.02))+ labs(fill = "density", title="")+xlab("GDP per capita in country of residence")+ylab("Position in the growth-vs-environment debate")
+
+linearMod <- lm(GEMcluster ~ countryresGDPpc_current , data=data)
+summary(linearMod)
+
+logitMod <- glm(GEM_GGrowth ~ countryresGDPpc_current, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_AGrowth ~ countryresGDPpc_current, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_DGrowth ~ countryresGDPpc_current, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+
+
+
+linearMod <- lm(GEMcluster ~ countryoriGDPpc_PPP , data=data)
+summary(linearMod)
+
+logitMod <- glm(GEM_GGrowth ~ countryoriGDPpc_PPP, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_AGrowth ~ countryoriGDPpc_PPP, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_DGrowth ~ countryoriGDPpc_PPP, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+
+
+
+linearMod <- lm(GEMcluster ~ countryresGDPpc_PPP , data=data)
+summary(linearMod)
+
+logitMod <- glm(GEM_GGrowth ~ countryresGDPpc_PPP, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_AGrowth ~ countryresGDPpc_PPP, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_DGrowth ~ countryresGDPpc_PPP, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+
+
+
+
+linearMod <- lm(GEMcluster ~ countryresGDPpc_current + countryoriGDPpc_current  , data=data)
+summary(linearMod)
+linearMod <- lm(GEMcluster ~ countryresGDPpc_PPP + countryoriGDPpc_PPP , data=data)
+summary(linearMod)
+
+
+linearMod <- lm(GEMcluster ~ log(countryresGDPpc_current) +log(countryoriGDPpc_current)  , data=data)
+summary(linearMod)
+linearMod <- lm(GEMcluster ~ log(countryresGDPpc_PPP) +log(countryoriGDPpc_PPP) , data=data)
+summary(linearMod)
+
+
+
+ggplot(data, aes(x=countryoriIHDI, y=GEMcluster) )+ geom_point()  +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon")+
+  scale_fill_distiller(palette=1, direction=1) +
+  geom_smooth(method = "lm", se = FALSE,colour="red")+
+  #ylim(0,250)+
+  #scale_alpha_continuous(limits=c(0.001,0.02))+
+  scale_alpha_continuous(limits=c(0.001,0.02))+ labs(fill = "density", title="")+xlab("IHDI in country of origin")+ylab("Position in the growth-vs-environment debate")
+
+
+linearMod <- lm(GEMcluster ~ countryoriIHDI  , data=data)
+summary(linearMod)
+
+logitMod <- glm(GEM_GGrowth ~ countryoriIHDI, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_AGrowth ~ countryoriIHDI, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_DGrowth ~ countryoriIHDI, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+
+ggplot(data, aes(x=countryresIHDI, y=GEMcluster) )+ geom_point()  +
+  stat_density_2d(aes(fill = ..level..), geom = "polygon")+
+  scale_fill_distiller(palette=1, direction=1) +
+  geom_smooth(method = "lm", se = FALSE,colour="red")+
+  #ylim(0,250)+
+  #scale_alpha_continuous(limits=c(0.001,0.02))+
+  scale_alpha_continuous(limits=c(0.001,0.02))+ labs(fill = "density", title="")+xlab("IHDI in country of residence")+ylab("Position in the growth-vs-environment debate")
+
+linearMod <- lm(GEMcluster ~ countryresIHDI , data=data)
+summary(linearMod)
+
+logitMod <- glm(GEM_GGrowth ~ countryresIHDI, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_AGrowth ~ countryresIHDI, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+logitMod <- glm(GEM_DGrowth ~ countryresIHDI, data=data, family = "binomial")
+summary(logitMod)
+PseudoR2(logitMod, which = "Nagelkerke")
+
+linearMod <- lm(GEMcluster ~  countryresIHDI + countryoriIHDI, data=data)
+summary(linearMod)
+linearMod <- lm(GEMcluster ~ countryresIHDI + countryoriIHDI, data=data)
+summary(linearMod)
+
+#and for each dummy
+logitMod <- glm(GEM_GGrowth ~ countryresGDPpc_current + countryoriGDPpc_current, data=data, family = "binomial")
+summary(logitMod)
+
+logitMod <- glm(GEM_GGrowth ~ log(countryresGDPpc_current) +log(countryoriGDPpc_current) , data=data, family = "binomial")
+summary(logitMod)
+
+
+logitMod <- glm(GEM_GGrowth ~  countryresIHDI + countryoriIHDI, data=data, family = "binomial")
+summary(logitMod)
+
+
+
+logitMod <- glm(GEM_AGrowth ~ countryresGDPpc_current + countryoriGDPpc_current , data=data, family = "binomial")
+summary(logitMod)
+logitMod <- glm(GEM_AGrowth ~ log(countryresGDPpc_current) +log(countryoriGDPpc_current) , data=data, family = "binomial")
+summary(logitMod)
+
+
+logitMod <- glm(GEM_AGrowth ~ countryresIHDI + countryoriIHDI, data=data, family = "binomial")
+summary(logitMod)
+
+
+
+logitMod <- glm(GEM_DGrowth ~ countryresGDPpc_current + countryoriGDPpc_current , data=data, family = "binomial")
+summary(logitMod)
+
+logitMod <- glm(GEM_DGrowth ~ log(countryresGDPpc_current) +log(countryoriGDPpc_current) , data=data, family = "binomial")
+summary(logitMod)
+
+logitMod <- glm(GEM_DGrowth ~   countryresIHDI + countryoriIHDI, data=data, family = "binomial")
+summary(logitMod)
+
+
+
+
+
+
+logitMod <- glm(GEM_GGrowth ~ countryresGDPpc_PPP + countryoriGDPpc_PPP, data=data, family = "binomial")
+summary(logitMod)
+
+logitMod <- glm(GEM_GGrowth ~ log(countryresGDPpc_PPP) +log(countryoriGDPpc_PPP) , data=data, family = "binomial")
+summary(logitMod)
+
+
+logitMod <- glm(GEM_AGrowth ~ countryresGDPpc_PPP + countryoriGDPpc_PPP, data=data, family = "binomial")
+summary(logitMod)
+
+logitMod <- glm(GEM_AGrowth ~ log(countryresGDPpc_PPP) +log(countryoriGDPpc_PPP), data=data, family = "binomial")
+summary(logitMod)
+
+
+logitMod <- glm(GEM_DGrowth ~ countryresGDPpc_PPP + countryoriGDPpc_PPP , data=data, family = "binomial")
+summary(logitMod)
+
+logitMod <- glm(GEM_DGrowth ~ log(countryresGDPpc_PPP) +log(countryoriGDPpc_PPP), data=data, family = "binomial")
+summary(logitMod)
+
+
+
+
+
+data$country_grouping_B<-matrix(NA,length(data$country_residence),1)
+
+data$country_grouping_B[which(data$country_residence %in% c('Canada','United States of America'))]<-"North America"
+
+data$country_grouping_B[which(data$country_residence %in% c('China','Brazil','India','Russia','South Africa'))]<-"BRICS"
+
+data$country_grouping_B[which(data$country_residence %in% c('Austria','Belgium','Bulgaria','Croatia','Czech Republic','Denmark','Finland','France','Germany','Greece','Hungary','Ireland','Italy','Latvia','Lithuania','Luxembourg','Netherlands','Poland','Portugal','Romania','Slovakia','Sweden','Spain'))]<-"EU"
+
+data$country_grouping_B[which(data$country_residence %in% c('Australia','Chile','Colombia','Costa Rica','Japan','Mexico','New Zealand','Norway','South Korea','Switzerland','Turkey','United Kingdom'))]<-"Other OECD"
+
+data$country_grouping_B[which(data$country_residence %in% c('Argentina','Bangladesh','Benin','Bhutan','Cameroon','Cuba','Egypt','Eswatini','Ethiopia','Georgia','Ghana','Indonesia','Iran','Kazakhstan','Kenya','Lebanon','Malaysia','Namibia','Nepal','Niger','Nigeria','North Macedonia','Oman','Other','Pakistan','Peru','Philippines','Rwanda','Saudi Arabia','Serbia','Singapore','Sri Lanka', 'Taiwan','Thailand','Uganda','Ukraine','United Arab Emirates', 'Uruguay','Venezuela','Vietnam', 'Zambia','Zimbabwe'))]<-"Other non-OECD"
+table(data$country_grouping_B)                     
+data$country_grouping_B<-as.factor(data$country_grouping_B)
+
+
+
+
+
+data$country_grouping_Bori<-matrix(NA,length(data$country_origin),1)
+
+data$country_grouping_Bori[which(data$country_origin %in% c('Canada','United States of America'))]<-"North America"
+
+data$country_grouping_Bori[which(data$country_origin %in% c('China','Brazil','India','Russia','South Africa'))]<-"BRICS"
+
+data$country_grouping_Bori[which(data$country_origin %in% c('Austria','Belgium','Bulgaria','Croatia','Czech Republic','Denmark','Finland','France','Germany','Greece','Hungary','Ireland','Italy','Latvia','Lithuania','Luxembourg','Netherlands','Poland','Portugal','Romania','Slovakia','Sweden','Spain'))]<-"EU"
+
+data$country_grouping_Bori[which(data$country_origin %in% c('Australia','Chile','Colombia','Costa Rica','Japan','Mexico','New Zealand','Norway','South Korea','Switzerland','Turkey','United Kingdom'))]<-"Other OECD"
+
+data$country_grouping_Bori[which(data$country_origin %in% c('Argentina','Bangladesh','Benin','Bhutan','Cameroon','Cuba','Egypt','Eswatini','Ethiopia','Georgia','Ghana','Indonesia','Iran','Kazakhstan','Kenya','Lebanon','Malaysia','Namibia','Nepal','Niger','Nigeria','North Macedonia','Oman','Other','Pakistan','Peru','Philippines','Rwanda','Saudi Arabia','Serbia','Singapore','Sri Lanka', 'Taiwan','Thailand','Uganda','Ukraine','United Arab Emirates', 'Uruguay','Venezuela','Vietnam', 'Zambia','Zimbabwe'))]<-"Other non-OECD"
+table(data$country_grouping_Bori)                     
+data$country_grouping_Bori<-as.factor(data$country_grouping_Bori)
+
+
+
+data$discipline_grouping_A<-matrix(NA,length(data$country_residence),1)
+
+data$discipline_grouping_A[which(data$Primary_research_field %in% c('Env. economics','Oth. economics'))]<-"Economics"
+
+data$discipline_grouping_A[which(data$Primary_research_field %in% c('Agri./forestry','Ind. ecology','Sust. transition'))]<-"Environmental studies"
+
+data$discipline_grouping_A[which(data$Primary_research_field %in% c('Ecol. Economics','Oth. env. soc. sci.'))]<-"Environmental social science"
+
+data$discipline_grouping_A[which(data$Primary_research_field %in% c('Natural sci.'))]<-"Natural sciences"
+
+
+data$discipline_grouping_A[which(data$Primary_research_field %in% c('Engineering', 'Math & comp. sci.'))]<-"Formal sciences"
+
+
+data$discipline_grouping_A[which(data$Primary_research_field %in% c('Law','Political sci.','Psychology','Sociology','Geography'))]<-"Other social sciences"
+
+
+table(data$discipline_grouping_A)                     
+data$discipline_grouping_A<-as.factor(data$discipline_grouping_A)
+
+
+
+
+
+
+
+residence_GreenGrowth<-data$country_grouping_B[which(data$GEMcluster==1)]
+residence_AGrowth<-data$country_grouping_B[which(data$GEMcluster==2)]
+residence_DeGrowth<-data$country_grouping_B[which(data$GEMcluster==3)]
+ sort(table(residence_GreenGrowth),decreasing = TRUE)
+ sort(table(residence_AGrowth),decreasing = TRUE)
+ sort(table(residence_DeGrowth),decreasing = TRUE)
+
+ 
+pie_labels <- paste0(names(table(residence_GreenGrowth)), ", ", round(100*table(residence_GreenGrowth)/sum(table(residence_GreenGrowth)), 2), "%")
+pie(table(residence_GreenGrowth), labels = pie_labels,main="Residence of Green growth researchers")
+
+pie_labels <- paste0(names(table(residence_AGrowth)), ", ", round(100*table(residence_AGrowth)/sum(table(residence_AGrowth)), 2), "%")
+pie(table(residence_AGrowth), labels = pie_labels,main="Residence of Agrowth researchers")
+
+pie_labels <- paste0(names(table(residence_DeGrowth)), ", ", round(100*table(residence_DeGrowth)/sum(table(residence_DeGrowth)), 2), "%")
+pie(table(residence_DeGrowth), labels = pie_labels,main="Residence of Degrowth researchers")
+
+data$GEMclusterF<-matrix(NA,length(data$GEMcluster),1)
+data$GEMclusterF[which(data$GEMcluster==1)]<-"Green Growth"
+data$GEMclusterF[which(data$GEMcluster==2)]<-"Agrowth"
+data$GEMclusterF[which(data$GEMcluster==3)]<-"Degrowth"
+
+residence_NorthAmerica<-data$GEMclusterF[which(data$country_grouping_B=="North America")]
+residence_BRICS<-data$GEMclusterF[which(data$country_grouping_B=="BRICS")]
+residence_EU<-data$GEMclusterF[which(data$country_grouping_B=="EU")]
+residence_OtherOECD<-data$GEMclusterF[which(data$country_grouping_B=="Other OECD")]
+residence_OthernonOECD<-data$GEMclusterF[which(data$country_grouping_B=="Other non-OECD")]
+
+ sort(table(residence_NorthAmerica),decreasing = TRUE)
+ sort(table(residence_BRICS),decreasing = TRUE)
+ sort(table(residence_EU),decreasing = TRUE)
+ sort(table(residence_OtherOECD),decreasing = TRUE)
+ sort(table(residence_OthernonOECD),decreasing = TRUE)
+
+pie_labels <- paste0(names(table(residence_NorthAmerica)), ", ", round(100*table(residence_NorthAmerica)/sum(table(residence_NorthAmerica)), 2), "%")
+pie(table(residence_NorthAmerica), labels = pie_labels,main="North America as residence for distinct opinions")
+pie_labels <- paste0(names(table(residence_BRICS)), ", ", round(100*table(residence_BRICS)/sum(table(residence_BRICS)), 2), "%")
+pie(table(residence_BRICS), labels = pie_labels,main="BRICS as residence for distinct opinions")
+pie_labels <- paste0(names(table(residence_EU)), ", ", round(100*table(residence_EU)/sum(table(residence_EU)), 2), "%")
+pie(table(residence_EU), labels = pie_labels,main="EU as residence for distinct opinions")
+pie_labels <- paste0(names(table(residence_OtherOECD)), ", ", round(100*table(residence_OtherOECD)/sum(table(residence_OtherOECD)), 2), "%")
+pie(table(residence_OtherOECD), labels = pie_labels,main="Other OECD as residence for distinct opinions")
+pie_labels <- paste0(names(table(residence_OthernonOECD)), ", ", round(100*table(residence_OthernonOECD)/sum(table(residence_OthernonOECD)), 2), "%")
+pie(table(residence_OthernonOECD), labels = pie_labels,main="Other non-OECD as residence for distinct opinions")
+
+
+
+
+
+
+origin_NorthAmerica<-data$GEMclusterF[which(data$country_grouping_Bori=="North America")]
+origin_BRICS<-data$GEMclusterF[which(data$country_grouping_Bori=="BRICS")]
+origin_EU<-data$GEMclusterF[which(data$country_grouping_Bori=="EU")]
+origin_OtherOECD<-data$GEMclusterF[which(data$country_grouping_Bori=="Other OECD")]
+origin_OthernonOECD<-data$GEMclusterF[which(data$country_grouping_Bori=="Other non-OECD")]
+
+ sort(table(origin_NorthAmerica),decreasing = TRUE)
+ sort(table(origin_BRICS),decreasing = TRUE)
+ sort(table(origin_EU),decreasing = TRUE)
+ sort(table(origin_OtherOECD),decreasing = TRUE)
+ sort(table(origin_OthernonOECD),decreasing = TRUE)
+
+pie_labels <- paste0(names(table(origin_NorthAmerica)), ", ", round(100*table(origin_NorthAmerica)/sum(table(origin_NorthAmerica)), 2), "%")
+pie(table(origin_NorthAmerica), labels = pie_labels,main="North America as origin for distinct opinions")
+ pie_labels <- paste0(names(table(origin_BRICS)), ", ", round(100*table(origin_BRICS)/sum(table(origin_BRICS)), 2), "%")
+pie(table(origin_BRICS), labels = pie_labels,main="BRICS as origin for distinct opinions")
+ pie_labels <- paste0(names(table(origin_EU)), ", ", round(100*table(origin_EU)/sum(table(origin_EU)), 2), "%")
+pie(table(origin_EU), labels = pie_labels,main="EU as origin for distinct opinions")
+ pie_labels <- paste0(names(table(origin_OtherOECD)), ", ", round(100*table(origin_OtherOECD)/sum(table(origin_OtherOECD)), 2), "%")
+pie(table(origin_OtherOECD), labels = pie_labels,main="Other OECD as origin for distinct opinions")
+ pie_labels <- paste0(names(table(origin_OthernonOECD)), ", ", round(100*table(origin_OthernonOECD)/sum(table(origin_OthernonOECD)), 2), "%")
+pie(table(origin_OthernonOECD), labels = pie_labels,main="Other non-OECD as origin for distinct opinions")
+
+
+
+origin_GreenGrowth<-data$country_grouping_Bori[which(data$GEMcluster==1)]
+origin_AGrowth<-data$country_grouping_Bori[which(data$GEMcluster==2)]
+origin_DeGrowth<-data$country_grouping_Bori[which(data$GEMcluster==3)]
+ sort(table(origin_GreenGrowth),decreasing = TRUE)
+ sort(table(origin_AGrowth),decreasing = TRUE)
+ sort(table(origin_DeGrowth),decreasing = TRUE)
+
+pie_labels <- paste0(names(table(origin_GreenGrowth)), ", ", round(100*table(origin_GreenGrowth)/sum(table(origin_GreenGrowth)), 2), "%")
+pie(table(origin_GreenGrowth), labels = pie_labels,main="Origin of Green growth researchers")
+pie_labels <- paste0(names(table(origin_AGrowth)), ", ", round(100*table(origin_AGrowth)/sum(table(origin_AGrowth)), 2), "%")
+pie(table(origin_AGrowth), labels = pie_labels,main="Origin of Agrowth researchers")
+pie_labels <- paste0(names(table(origin_DeGrowth)), ", ", round(100*table(origin_DeGrowth)/sum(table(origin_DeGrowth)), 2), "%")
+pie(table(origin_DeGrowth), labels = pie_labels,main="Origin of Degrowth researchers")
+
+
+
+
+discipline_GreenGrowth<-data$discipline_grouping_A[which(data$GEMcluster==1)]
+discipline_AGrowth<-data$discipline_grouping_A[which(data$GEMcluster==2)]
+discipline_DeGrowth<-data$discipline_grouping_A[which(data$GEMcluster==3)]
+ sort(table(discipline_GreenGrowth),decreasing = TRUE)
+ sort(table(discipline_AGrowth),decreasing = TRUE)
+ sort(table(discipline_DeGrowth),decreasing = TRUE)
+
+pie_labels <- paste0(names(table(discipline_GreenGrowth)), ", ", round(100*table(discipline_GreenGrowth)/sum(table(discipline_GreenGrowth)), 2), "%")
+pie(table(discipline_GreenGrowth), labels = pie_labels,main="Discipline of Green growth researchers")
+pie_labels <- paste0(names(table(discipline_AGrowth)), ", ", round(100*table(discipline_AGrowth)/sum(table(discipline_AGrowth)), 2), "%")
+pie(table(discipline_AGrowth), labels = pie_labels,main="Discipline of Agrowth researchers")
+pie_labels <- paste0(names(table(discipline_DeGrowth)), ", ", round(100*table(discipline_DeGrowth)/sum(table(discipline_DeGrowth)), 2), "%")
+pie(table(discipline_DeGrowth), labels = pie_labels,main="Discipline of Degrowth researchers")
+
+
+
+
+discipline_Economics<-data$GEMclusterF[which(data$discipline_grouping_A=="Economics")]
+discipline_EnvStudies<-data$GEMclusterF[which(data$discipline_grouping_A=="Environmental studies")]
+discipline_EnvSS<-data$GEMclusterF[which(data$discipline_grouping_A=="Environmental social science")]
+discipline_NatSci<-data$GEMclusterF[which(data$discipline_grouping_A=="Natural sciences")]
+discipline_FormalSci<-data$GEMclusterF[which(data$discipline_grouping_A=="Formal sciences")]
+discipline_OthSS<-data$GEMclusterF[which(data$discipline_grouping_A=="Other social sciences")]
+
+ sort(table(discipline_Economics),decreasing = TRUE)
+ sort(table(discipline_EnvStudies),decreasing = TRUE)
+ sort(table(discipline_EnvSS),decreasing = TRUE)
+ sort(table(discipline_NatSci),decreasing = TRUE)
+ sort(table(discipline_FormalSci),decreasing = TRUE)
+ sort(table(discipline_OthSS),decreasing = TRUE)
+ 
+pie_labels <- paste0(names(table(discipline_Economics)), ", ", round(100*table(discipline_Economics)/sum(table(discipline_Economics)), 2), "%")
+pie(table(discipline_Economics), labels = pie_labels,main="Economics as discipline for distinct opinions")
+pie_labels <- paste0(names(table(discipline_EnvStudies)), ", ", round(100*table(discipline_EnvStudies)/sum(table(discipline_EnvStudies)), 2), "%")
+pie(table(discipline_EnvStudies), labels = pie_labels,main="Environmental studie as discipline for distinct opinions")
+pie_labels <- paste0(names(table(discipline_EnvSS)), ", ", round(100*table(discipline_EnvSS)/sum(table(discipline_EnvSS)), 2), "%")
+pie(table(discipline_EnvSS), labels = pie_labels,main="Environmental social science as discipline for distinct opinions")
+pie_labels <- paste0(names(table(discipline_NatSci)), ", ", round(100*table(discipline_NatSci)/sum(table(discipline_NatSci)), 2), "%")
+pie(table(discipline_NatSci), labels = pie_labels,main="Natural sciencess as discipline for distinct opinions")
+pie_labels <- paste0(names(table(discipline_FormalSci)), ", ", round(100*table(discipline_FormalSci)/sum(table(discipline_FormalSci)), 2), "%")
+pie(table(discipline_FormalSci), labels = pie_labels,main="Formal sciences as discipline for distinct opinions")
+pie_labels <- paste0(names(table(discipline_OthSS)), ", ", round(100*table(discipline_OthSS)/sum(table(discipline_OthSS)), 2), "%")
+pie(table(discipline_OthSS), labels = pie_labels,main="Other social sciences as discipline for distinct opinions")
+
+```
+
+
+
+
+
+
+I also clustered respondents who answered the 10 statements on carbon pricing using LCA. Note that I discarded anyone who did not answer at least one of the statements or gave "I do not know" response.
+Therefore, out 0f 789 observations, we are dealing with 571 only!
+
+I obtain three clusters. We clearly see that on some statements opinion of the clusters is not so diffeerent:
+
+5 "Carbon pricing decentralizes policy, reducing regulators' need for information.",
+
+7  "Carbon pricing takes into account that in making purchasing decisions, most consumers are more influenced by prices than by environmental concerns.", 
+
+10  "A unique advantage of carbon pricing over other instruments is that it generates public revenues which can be used for multiple purposes."
+
+But on other statement the views between clusters 1 and 3 are very different.
+
+Cluster 1 is skeptical about carbon pricing agreeing with statements:
+
+2 "Carbon pricing has little impact on the speed of low-carbon innovation.",
+
+4 "Carbon pricing promotes emissions reduction at the margin but cannot stimulate major changes necessary for achieving zero carbon emissions.",
+
+6 "Contextual, sector-specific climate policies are more effective in terms of overall emissions reduction than economy-wide carbon pricing.",
+
+9 "Carbon pricing performs worse than other instruments when consumers and firms do not  make rational choices.",
+
+ Cluster 3 in contrast are supporting CP siagreeing on the abovementioned statements and additionally stronger than other clusters agreeing with statement:
+ 
+ 1"Since carbon pricing alters relative prices, firms and consumers automatically account for climate-change effects of their decisions.",
+ 
+ 3 "Carbon pricing is the most effective instrument to limit energy/carbon rebound. An example of rebound is driving more kilometres after buying a more fuel-efficient car.",
+ 
+ 8"Carbon pricing can be more easily up-scaled and harmonized globally than other instruments."
+ 
+ 
+ According to the last chart and the regressions, cluster 3 (enthusiasts) is concentrated in disciplines like Psychology, Computer science and Env economics, while skepticists are (nonsignificantly) concentrated in political science, Oth Env Soc Sci and sustainability transition
+ 
+ Finally, the confusion matrix shows that enthusiasts of CP are relatively more common among GreenGrowth and Agrowth supporters, while Degrowth supporters are rather equally distributed among CP skepticists and enthusiasts
+
+```{r, echo=FALSE}
+
+for (ic in 70:79){
+  data[which(data[,ic]==6),ic]<-NA
+}
+
+
+colnames(data)[70:79]<-c("CPstatementsZCosts_internalization","CPstatementsZInnovation_speed","CPstatementsZRebound","CPstatementsZSmall_change","CPstatementsZDecentralized_policy","CPstatementsZContextual_policy","CPstatementsZPrice_sensitivity","CPstatementsZPolicy_harmonization","CPstatementsZBounded_rationality","CPstatementsZPublic_revenues")
+
+list_CA_cluster<-seq(1,length(data$STATUS),by=1)[-c(which(is.na(data[,70])),which(is.na(data[,71])),which(is.na(data[,72])),which(is.na(data[,73])),which(is.na(data[,74])),which(is.na(data[,75])),which(is.na(data[,76])),which(is.na(data[,77])),which(is.na(data[,78])),which(is.na(data[,79]))   )]
+
+
+f<-with(data, cbind(CPstatementsZCosts_internalization,CPstatementsZInnovation_speed,CPstatementsZRebound,CPstatementsZSmall_change,CPstatementsZDecentralized_policy,CPstatementsZContextual_policy,CPstatementsZPrice_sensitivity,CPstatementsZPolicy_harmonization,CPstatementsZBounded_rationality,CPstatementsZPublic_revenues)~1) 
+
+set.seed(01012)
+lc1 <- poLCA(f, maxiter=1000, nclass=1, nrep=10, data=data, verbose=FALSE)
+lc2 <- poLCA(f, maxiter=1000, nclass=2, nrep=10, data=data, verbose=FALSE)
+lc3 <- poLCA(f, maxiter=1000, nclass=3, nrep=10, data=data, verbose=FALSE)
+lc4 <- poLCA(f, maxiter=1000, nclass=4, nrep=10, data=data, verbose=FALSE)
+lc5 <- poLCA(f, maxiter=1000, nclass=5, nrep=10, data=data, verbose=FALSE)
+lc6 <- poLCA(f, maxiter=1000, nclass=6, nrep=10, data=data, verbose=FALSE)
+lc7 <- poLCA(f, maxiter=1000, nclass=7, nrep=10, data=data, verbose=FALSE)
+lc8 <- poLCA(f, maxiter=1000, nclass=8, nrep=10, data=data, verbose=FALSE)
+lc9 <- poLCA(f, maxiter=1000, nclass=9, nrep=10, data=data, verbose=FALSE)
+
+# generate dataframe with fit-values
+
+results <- data.frame(Modell=c("Modell 1"),
+                      log_likelihood=lc1$llik,
+                      df = lc1$resid.df,
+                      BIC=lc1$bic,
+                      ABIC=  (-2*lc1$llik) + ((log((lc1$N + 2)/24)) * lc1$npar),
+                      CAIC = (-2*lc1$llik) + lc1$npar * (1 + log(lc1$N)), 
+                      likelihood_ratio=lc1$Gsq)
+results$Modell<-as.integer(results$Modell)
+results[1,1]<-c("1 cluster")
+results[2,1]<-c("2 clusters")
+results[3,1]<-c("3 clusters")
+results[4,1]<-c("4 clusters")
+results[5,1]<-c("5 clusters")
+results[6,1]<-c("6 clusters")
+results[7,1]<-c("7 clusters")
+results[8,1]<-c("8 clusters")
+results[9,1]<-c("9 clusters")
+
+results[2,2]<-lc2$llik
+results[3,2]<-lc3$llik
+results[4,2]<-lc4$llik
+results[5,2]<-lc5$llik
+results[6,2]<-lc6$llik
+results[7,2]<-lc7$llik
+results[8,2]<-lc8$llik
+results[9,2]<-lc9$llik
+
+results[2,3]<-lc2$resid.df
+results[3,3]<-lc3$resid.df
+results[4,3]<-lc4$resid.df
+results[5,3]<-lc5$resid.df
+results[6,3]<-lc6$resid.df
+results[7,3]<-lc7$resid.df
+results[8,3]<-lc8$resid.df
+results[9,3]<-lc9$resid.df
+
+results[2,4]<-lc2$bic
+results[3,4]<-lc3$bic
+results[4,4]<-lc4$bic
+results[5,4]<-lc5$bic
+results[6,4]<-lc6$bic
+results[7,4]<-lc7$bic
+results[8,4]<-lc8$bic
+results[9,4]<-lc9$bic
+
+results[2,5]<-(-2*lc2$llik) + ((log((lc2$N + 2)/24)) * lc2$npar) #abic
+results[3,5]<-(-2*lc3$llik) + ((log((lc3$N + 2)/24)) * lc3$npar)
+results[4,5]<-(-2*lc4$llik) + ((log((lc4$N + 2)/24)) * lc4$npar)
+results[5,5]<-(-2*lc5$llik) + ((log((lc5$N + 2)/24)) * lc5$npar)
+results[6,5]<-(-2*lc6$llik) + ((log((lc6$N + 2)/24)) * lc6$npar)
+results[7,5]<-(-2*lc7$llik) + ((log((lc7$N + 2)/24)) * lc7$npar) 
+results[8,5]<-(-2*lc8$llik) + ((log((lc8$N + 2)/24)) * lc8$npar) 
+results[9,5]<-(-2*lc9$llik) + ((log((lc9$N + 2)/24)) * lc9$npar) 
+
+results[2,6]<- (-2*lc2$llik) + lc2$npar * (1 + log(lc2$N)) #caic
+results[3,6]<- (-2*lc3$llik) + lc3$npar * (1 + log(lc3$N))
+results[4,6]<- (-2*lc4$llik) + lc4$npar * (1 + log(lc4$N))
+results[5,6]<- (-2*lc5$llik) + lc5$npar * (1 + log(lc5$N))
+results[6,6]<- (-2*lc6$llik) + lc6$npar * (1 + log(lc6$N))
+results[7,6]<- (-2*lc7$llik) + lc7$npar * (1 + log(lc7$N))
+results[8,6]<- (-2*lc8$llik) + lc8$npar * (1 + log(lc8$N))
+results[9,6]<- (-2*lc9$llik) + lc9$npar * (1 + log(lc9$N))
+
+results[2,7]<-lc2$Gsq
+results[3,7]<-lc3$Gsq
+results[4,7]<-lc4$Gsq
+results[5,7]<-lc5$Gsq
+results[6,7]<-lc6$Gsq
+results[7,7]<-lc7$Gsq
+results[8,7]<-lc8$Gsq
+results[9,7]<-lc9$Gsq
+
+
+entropy<-function (p) sum(-p*log(p))
+
+results$R2_entropy
+results[1,8]<-c("-")
+
+error_prior<-entropy(lc2$P) # class proportions model 2
+error_post<-mean(apply(lc2$posterior,1, entropy),na.rm = TRUE)
+results[2,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc3$P) # class proportions model 3
+error_post<-mean(apply(lc3$posterior,1, entropy),na.rm = TRUE)
+results[3,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc4$P) # class proportions model 4
+error_post<-mean(apply(lc4$posterior,1, entropy),na.rm = TRUE)
+results[4,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc5$P) # class proportions model 5
+error_post<-mean(apply(lc5$posterior,1, entropy),na.rm = TRUE)
+results[5,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc6$P) # class proportions model 6
+error_post<-mean(apply(lc6$posterior,1, entropy),na.rm = TRUE)
+results[6,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc7$P) # class proportions model 6
+error_post<-mean(apply(lc7$posterior,1, entropy),na.rm = TRUE)
+results[7,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc8$P) # class proportions model 6
+error_post<-mean(apply(lc8$posterior,1, entropy),na.rm = TRUE)
+results[8,8]<-round(((error_prior-error_post) / error_prior),3)
+
+error_prior<-entropy(lc9$P) # class proportions model 6
+error_post<-mean(apply(lc9$posterior,1, entropy),na.rm = TRUE)
+results[9,8]<-round(((error_prior-error_post) / error_prior),3)
+
+# combining results to a dataframe
+colnames(results)<-c("Model","log-likelihood","resid. df","BIC","aBIC","cAIC","likelihood-ratio","Entropy")
+lca_results<-results
+
+#results
+
+
+
+
+
+# ELBOW DIAGRAM
+
+# Order categories of results$model in order of appearance
+#install.packages("forcats")
+library("forcats")
+#results$model < - as_factor(results$model) 
+
+#convert to long format
+results2<-tidyr::gather(results,Kriterium,Guete,4:6)
+#results2
+# 
+# #plot 
+# fit.plot<-ggplot(results2) + 
+#   geom_point(aes(x=Model,y=Guete),size=3) +
+#   geom_line(aes(Model, Guete, group = 1)) +
+#   theme_bw()+
+#   labs(x = "", y="", title = "") + 
+#   facet_grid(Kriterium ~. ,scales = "free") +
+#   theme_bw(base_size = 16, base_family = "") +   
+#   theme(panel.grid.major.x = element_blank() ,
+#         panel.grid.major.y = element_line(colour="grey", size=0.5),
+#         legend.title = element_text(size = 16, face = 'bold'),
+#         axis.text = element_text(size = 12),
+#         axis.text.x = element_text(size = 12, angle = 45, hjust = 1),
+#         axis.title = element_text(size = 16),
+#         legend.text=  element_text(size=16),
+#         axis.line = element_line(colour = "black")) # Achsen etwas dicker
+# 
+# # save 650 x 800
+# fit.plot
+
+
+
+
+#Assume that we stick to x classes, show their size
+round(colMeans(lc3$posterior)*100,2)
+index_i<-apply(lc3$posterior, 1, which.max)# find for each id, the  identified class
+
+index_i[index_i==2]<-5
+index_i[index_i==1]<-2
+index_i[index_i==5]<-1
+
+#table(index_i)
+data$class_CT<-matrix(NA,length(data$STATUS),1)
+data$class_CT[list_CA_cluster]<-index_i
+# 
+# data$class_CT[index_i==1]<-2
+# data$class_CT[index_i==2]<-1
+# data$class_CT[index_i==3]<-3
+#data_clust$class_LCA[index_i==4]<-"cluster4PubSur"
+# 
+# data$class_CT<-as.factor(data$class_CT)
+# 
+# m_change <- polr(class_CT ~   Primary_research_field+1 
+#                  , data = data, Hess=TRUE)
+# #summary(m_change)
+# ctable <- coef(summary(m_change))
+# p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+# (ctable <- cbind(ctable, "p value" = p))
+# ci <- confint(m_change)
+# #exp(coef(m_change))
+# ## OR and CI
+# exp(cbind(OR = coef(m_change), ci))
+# PseudoR2(m_change,which="Nagelkerke")
+# 
+# data$class_CT<-as.numeric(data$class_CT)
+# m_change <- lm(class_CT ~   Primary_research_field 
+#                  , data = data)
+# summary(m_change)
+# 
+# 
+# data$DisciplineClusterS<-matrix(0,length(data$STATUS),1)
+# data$DisciplineClusterS[which(data$Primary_research_field %in% c("Agri./forestry","Engineering","Geography","Ind. ecology","Natural sci.","Oth. env. soc. sci.","Political sci.","Sust. transition"))]<-3
+# data$DisciplineClusterS[which(data$Primary_research_field %in% c("Ecol. economics"))]<-4
+# data$DisciplineClusterS[which(data$Primary_research_field %in% c("Env. economics","Law","Oth. economics"))]<-2
+# data$DisciplineClusterS[which(data$Primary_research_field %in% c("Math & comp. sci."))]<-1
+# data$DisciplineClusterS[which(data$Primary_research_field %in% c("Sociology","Psychology"))]<-5
+# 
+# 
+# 
+# data_long<-reshape(data[list_CA_cluster,], direction = "long", varying = names(data)[70:79], idvar = "Response.ID", sep="Z",timevar="Question")
+# #plotting responses with respect to resulted clustering
+# p <- ggplot(data = data_long, aes(x=Question, y=CPstatements)) + 
+#   geom_boxplot(aes(fill=as.factor(class_CT)))  
+# p + facet_wrap( ~ Question, scales="free")+  
+#   scale_fill_manual(values=c("magenta","cyan","limegreen"),  name="", breaks=c("1","2","3"),
+#                     labels=c("CP skeptics", "CP undecided","CP enthusiasts"))+ 
+#   theme(axis.title.x=element_blank(),
+#         axis.text.x=element_blank(),
+#         axis.ticks.x=element_blank(),
+#         legend.position="bottom")
+# 
+# 
+# 
+# p <- ggplot(data = data_long, aes(x=Question, y=CPstatements)) + 
+#   geom_boxplot(aes(fill=as.factor(DisciplineClusterS)))  
+# p + facet_wrap( ~ Question, scales="free")+  
+#   scale_fill_manual(values=c("magenta","cyan","limegreen",'orange','brown'),  name="", breaks=c("1","2","3",'4','5'),
+#                     labels=c("Math & comp. sci", "Env./oth. econ. + law","Other sciences",'Ecol. economics','Sociology + psychology'))+ 
+#   theme(axis.title.x=element_blank(),
+#         axis.text.x=element_blank(),
+#         axis.ticks.x=element_blank(),
+#         legend.position="bottom")+guides(fill=guide_legend(nrow=2,byrow=TRUE))
+
+
+```
+
+Here instead of explaining policy support with ten statements, I try to explain membership in clusters growth-vs-environment ebate with these statements and other controls 
+
+```{r, echo=FALSE}
+#reminder of the order
+#•	[1] Direct regulation (e.g. technical standards, quotas) (importance_regulation)
+# •	[2] Carbon tax (importance_ctax)
+# •	[3] Cap-and-trade (importance_cap_trade)
+# •	[4] Adoption subsidies (importance_adoption_subsidies)
+# •	[5] Innovation support (e.g. R&D subsidies) (importance_innovation_support)
+# •	[6] Information provision (e.g. education, ecolabels) (importance_information)
+# •	[7] Other, please specify (optional) (importance_other) [SPECIFY]
+library(DescTools)
+data$continent<-matrix(NA,length(data$country_residence),1)
+
+data$continent[which(data$country_residence %in% c('Canada','Mexico','United States of America'))]<-"North America"
+data$continent[which(data$country_residence %in% c('Argentina','Brazil','Chile','Colombia','Costa Rica','Cuba','Peru'))]<-"South America"
+data$continent[which(data$country_residence %in% c('Austria','Belgium','Croatia','Czech Republic','Denmark','Finland','France','Germany','Greece','Hungary','Ireland','Italy','Latvia','Lithuania','Luxembourg','Netherlands','North Macedonia','Norway','Poland','Portugal','Romania','Russia','Serbia','Slovakia','Sweden','Switzerland','Spain','Ukraine','United Kingdom'))]<-"Europe"
+data$continent[which(data$country_residence %in% c('Bangladesh','China','Iran','India','Indonesia','Japan','Kazakhstan','Lebanon','Malaysia','Nepal','Pakistan','Philippines','Saudi Arabia','Singapore','South Korea','Sri Lanka','Thailand','Taiwan','Turkey','United Arab Emirates','Vietnam'))]<-"Asia"
+data$continent[which(data$country_residence %in% c('Australia','New Zealand'))]<-"Oceania"
+data$continent[which(data$country_residence %in% c('Benin','Cameroon','Ethiopia','Ghana','Kenya','Namibia','Niger','Nigeria','South Africa','Uganda','Zimbabwe'))]<-"Africa"
+data$continent[which(data$country_residence %in% c('Other'))]<-NA  
+table(data$continent)                     
+data$continent<-as.factor(data$continent)
+
+
+
+
+
+
+
+
+
+
+
+data$importance_Dreg<-as.factor(data$importantpolicies_1)
+data$importance_Ctax<-as.factor(data$importantpolicies_2)
+data$importance_Cmarket<-as.factor(data$importantpolicies_3)
+data$importance_Asub<-as.factor(data$importantpolicies_4)
+data$importance_Inns<-as.factor(data$importantpolicies_5)
+data$importance_Infp<-as.factor(data$importantpolicies_6)
+
+data$Primary_research_field<-as.factor(data$Primary_research_field)
+
+data$DisciplineCluster<-matrix(0,length(data$STATUS),1)
+data$DisciplineCluster[which(data$Primary_research_field %in% c("Agri./forestry","Engineering","Geography","Ind. ecology","Natural sci.","Oth. env. soc. sci.","Political sci.","Sust. transition"))]<-1
+data$DisciplineCluster2<-matrix(0,length(data$STATUS),1)
+data$DisciplineCluster2[which(data$Primary_research_field %in% c("Ecol. economics"))]<-1
+data$DisciplineCluster3<-matrix(0,length(data$STATUS),1)
+data$DisciplineCluster3[which(data$Primary_research_field %in% c("Env. economics","Law","Oth. economics"))]<-1
+data$DisciplineCluster4<-matrix(0,length(data$STATUS),1)
+
+data$DisciplineCluster4[which(data$Primary_research_field %in% c("Math & comp. sci."))]<-1
+data$DisciplineCluster5<-matrix(0,length(data$STATUS),1)
+
+data$DisciplineCluster5[which(data$Primary_research_field %in% c("Sociology","Psychology"))]<-1
+
+data$country_grouping_B <- as.factor(data$country_grouping_B)
+data$country_grouping_B <- relevel(data$country_grouping_B, ref = "Other OECD")
+
+
+data$discipline_grouping_A <- as.factor(data$discipline_grouping_A)
+data$discipline_grouping_A <- relevel(data$discipline_grouping_A, ref = "Environmental studies")
+
+
+print("Green growth")
+
+m_change <- glm(GEM_GGrowth ~ CPstatementsZCosts_internalization+CPstatementsZInnovation_speed+CPstatementsZRebound+CPstatementsZSmall_change+CPstatementsZDecentralized_policy+CPstatementsZContextual_policy+CPstatementsZPrice_sensitivity+CPstatementsZPolicy_harmonization+CPstatementsZBounded_rationality+CPstatementsZPublic_revenues#+criteria_1 #+criteria_2 +criteria_3 +criteria_4 #+ Primary_research_field 
+                 + second_order_belief_1 + climate_worry + research_experience_1+ gender + politics + +countryresIHDI +countryoriIHDI
+                 , data = data, family = "binomial")
+#summary(m_change)
+summary(m_change)
+
+
+
+print("Agrowth")
+
+m_change <- glm(GEM_AGrowth ~ CPstatementsZCosts_internalization+CPstatementsZInnovation_speed+CPstatementsZRebound+CPstatementsZSmall_change+CPstatementsZDecentralized_policy+CPstatementsZContextual_policy+CPstatementsZPrice_sensitivity+CPstatementsZPolicy_harmonization+CPstatementsZBounded_rationality+CPstatementsZPublic_revenues#+criteria_1 #+criteria_2 +criteria_3 +criteria_4 #+ Primary_research_field 
+                 + second_order_belief_1 + climate_worry + research_experience_1+ gender + politics 
++countryresIHDI +countryoriIHDI
+                 , data = data, family = "binomial")
+#summary(m_change)
+summary(m_change)
+
+
+print("Degrowth")
+
+m_change <- glm(GEM_DGrowth ~ CPstatementsZCosts_internalization+CPstatementsZInnovation_speed+CPstatementsZRebound+CPstatementsZSmall_change+CPstatementsZDecentralized_policy+CPstatementsZContextual_policy+CPstatementsZPrice_sensitivity+CPstatementsZPolicy_harmonization+CPstatementsZBounded_rationality+CPstatementsZPublic_revenues#+criteria_1 #+criteria_2 +criteria_3 +criteria_4 #+ Primary_research_field 
+                 + second_order_belief_1 + climate_worry + research_experience_1+ gender + politics +countryresIHDI +countryoriIHDI
+                 , data = data, family = "binomial")
+#summary(m_change)
+summary(m_change)
+
+
+
+
+
+
+
+
+
+print("Green growth")
+
+m_change <- glm(GEM_GGrowth ~ CPstatementsZCosts_internalization+CPstatementsZInnovation_speed+CPstatementsZRebound+CPstatementsZSmall_change+CPstatementsZDecentralized_policy+CPstatementsZContextual_policy+CPstatementsZPrice_sensitivity+CPstatementsZPolicy_harmonization+CPstatementsZBounded_rationality+CPstatementsZPublic_revenues#+criteria_1 #+criteria_2 +criteria_3 +criteria_4 #+ Primary_research_field 
+                 #+ second_order_belief_1 + climate_worry + research_experience_1+ gender + politics +continent
+                 , data = data, family = "binomial")
+#summary(m_change)
+summary(m_change)
+
+
+
+print("Agrowth")
+
+m_change <- glm(GEM_AGrowth ~ CPstatementsZCosts_internalization+CPstatementsZInnovation_speed+CPstatementsZRebound+CPstatementsZSmall_change+CPstatementsZDecentralized_policy+CPstatementsZContextual_policy+CPstatementsZPrice_sensitivity+CPstatementsZPolicy_harmonization+CPstatementsZBounded_rationality+CPstatementsZPublic_revenues#+criteria_1 #+criteria_2 +criteria_3 +criteria_4 #+ Primary_research_field 
+                 #+ second_order_belief_1 + climate_worry + research_experience_1+ gender + politics +continent
+                 , data = data, family = "binomial")
+#summary(m_change)
+summary(m_change)
+
+
+print("Degrowth")
+
+m_change <- glm(GEM_DGrowth ~ CPstatementsZCosts_internalization+CPstatementsZInnovation_speed+CPstatementsZRebound+CPstatementsZSmall_change+CPstatementsZDecentralized_policy+CPstatementsZContextual_policy+CPstatementsZPrice_sensitivity+CPstatementsZPolicy_harmonization+CPstatementsZBounded_rationality+CPstatementsZPublic_revenues#+criteria_1 #+criteria_2 +criteria_3 +criteria_4 #+ Primary_research_field 
+                 #+ second_order_belief_1 + climate_worry + research_experience_1+ gender + politics +continent
+                 , data = data, family = "binomial")
+#summary(m_change)
+summary(m_change)
+
+library(foreign)
+library(nnet)
+library(stargazer)
+setwd("D:/Projects/2_Working Papers/Scientific survey/GrADe cluster")#D:/Scientific survey
+
+
+data$GEMclusterF<-matrix(NA,length(data$GEMcluster),1)
+data$GEMclusterF[which(data$GEMcluster==1)]<-"Green Growth"
+data$GEMclusterF[which(data$GEMcluster==2)]<-"Agrowth"
+data$GEMclusterF[which(data$GEMcluster==3)]<-"Degrowth"
+
+table(data$GEMclusterF)
+data$GEMclusterF <- as.factor(data$GEMclusterF)
+data$GEMclusterF <- relevel(data$GEMclusterF, ref = "Agrowth")
+MultiLogit_GvsC = multinom(GEMclusterF ~ CPstatementsZCosts_internalization+CPstatementsZInnovation_speed+CPstatementsZRebound+CPstatementsZSmall_change+CPstatementsZDecentralized_policy+CPstatementsZContextual_policy+CPstatementsZPrice_sensitivity+CPstatementsZPolicy_harmonization+CPstatementsZBounded_rationality+CPstatementsZPublic_revenues#+criteria_1 #+criteria_2 +criteria_3 +criteria_4 #+ Primary_research_field 
+                 + second_order_belief_1 + climate_worry + research_experience_1+ gender + politics +log(countryresGDPpc) +log(countryoriGDPpc), data=data)
+summary(MultiLogit_GvsC)
+stargazer(MultiLogit_GvsC, type="html", out="MultiLogit_GvsC.htm")
+
+
+MultiLogit_GvsC1 = multinom(GEMclusterF ~ CPstatementsZCosts_internalization+CPstatementsZInnovation_speed+CPstatementsZRebound+CPstatementsZSmall_change+CPstatementsZDecentralized_policy+CPstatementsZContextual_policy+CPstatementsZPrice_sensitivity+CPstatementsZPolicy_harmonization+CPstatementsZBounded_rationality+CPstatementsZPublic_revenues, data=data)
+summary(MultiLogit_GvsC1)
+stargazer(MultiLogit_GvsC1, type="html", out="MultiLogit_GvsC1.htm")
+```
+some descriptive statistics on second order beliefs.
+People in env economics, law, other economics, eco economics and sustainability have highest second order beliefs. People in CompSci and Othe Soc Sci - the lowest
+
+
+
+Here finally I try to explain how well policy is evaluated in a policy mix by the four criteria (effectiveness, efficiency, equiaty and feasibility), the weights scientists assign to these weights and some additional controls
+
+It appears from the results that the general ranking of the four criteria in evaluating policy hear are not so important (low significance and coefficient size). Instead, what is important is how scientists judged instruments in terms of their performance on the four criteria.
+
+
+If I include both interaction terms and individual effects, significance deteriorates for manz variables.
+Testing variance inflation factor shows however that when adding single terms and interaction effects suffers from multicollinearity problems! (coeffecients should be below 5-10)
+```{r, echo=FALSE}
+
+Interaction_Dreg_Effe<-data$criteria_1*data$effectiveness_1
+Interaction_Dreg_Effi<-data$criteria_2*data$efficiency_1
+Interaction_Dreg_Equi<-data$criteria_3*data$equity_1
+Interaction_Dreg_Feas<-data$criteria_4*data$feasible_1
+
+Interaction_Ctax_Effe<-data$criteria_1*data$effectiveness_2
+Interaction_Ctax_Effi<-data$criteria_2*data$efficiency_2
+Interaction_Ctax_Equi<-data$criteria_3*data$equity_2
+Interaction_Ctax_Feas<-data$criteria_4*data$feasible_2
+
+Interaction_Cmarket_Effe<-data$criteria_1*data$effectiveness_3
+Interaction_Cmarket_Effi<-data$criteria_2*data$efficiency_3
+Interaction_Cmarket_Equi<-data$criteria_3*data$equity_3
+Interaction_Cmarket_Feas<-data$criteria_4*data$feasible_3
+
+Interaction_Asub_Effe<-data$criteria_1*data$effectiveness_4
+Interaction_Asub_Effi<-data$criteria_2*data$efficiency_4
+Interaction_Asub_Equi<-data$criteria_3*data$equity_4
+Interaction_Asub_Feas<-data$criteria_4*data$feasible_4
+
+Interaction_Inns_Effe<-data$criteria_1*data$effectiveness_5
+Interaction_Inns_Effi<-data$criteria_2*data$efficiency_5
+Interaction_Inns_Equi<-data$criteria_3*data$equity_5
+Interaction_Inns_Feas<-data$criteria_4*data$feasible_5
+
+Interaction_Infp_Effe<-data$criteria_1*data$effectiveness_6
+Interaction_Infp_Effi<-data$criteria_2*data$efficiency_6
+Interaction_Infp_Equi<-data$criteria_3*data$equity_6
+Interaction_Infp_Feas<-data$criteria_4*data$feasible_6
+
+data$GEM_GGrowth<-matrix(0,length(data$STATUS),1)
+data$GEM_GGrowth[which(data$GEMcluster==1)]<-1
+
+data$GEM_AGrowth<-matrix(0,length(data$STATUS),1)
+data$GEM_AGrowth[which(data$GEMcluster==2)]<-1
+
+data$GEM_DGrowth<-matrix(0,length(data$STATUS),1)
+data$GEM_DGrowth[which(data$GEMcluster==3)]<-1
+
+print("importance_Dreg")
+m_change <- polr(importance_Dreg ~ #criteria_1 +criteria_2 +criteria_3 +criteria_4 
+                # +effectiveness_1 + efficiency_1 + equity_1 + feasible_1 + #+ Primary_research_field 
+     # + Interaction_Dreg_Effe + Interaction_Dreg_Effi + Interaction_Dreg_Equi + Interaction_Dreg_Feas
+                   + second_order_belief_1 + climate_worry + research_experience_1+ gender + politics +GEM_AGrowth+GEM_DGrowth+continent
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+
+
+print("importance_Ctax")
+m_change <- polr(importance_Ctax ~ #criteria_1 +criteria_2 +criteria_3 +criteria_4 
+                 #+effectiveness_2 + efficiency_2 + equity_2 + feasible_2 + #+ Primary_research_field 
+    #+ Interaction_Ctax_Effe + Interaction_Ctax_Effi + Interaction_Ctax_Equi + Interaction_Ctax_Feas
+                 + second_order_belief_1 + climate_worry + research_experience_1+ gender + politics+GEM_AGrowth+GEM_DGrowth+ continent
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+
+
+
+print("importance_Cmarket")
+m_change <- polr(importance_Cmarket ~ #criteria_1 +criteria_2 +criteria_3 +criteria_4 
+                  # + effectiveness_3 + efficiency_3 + equity_3 + feasible_3 + #+ Primary_research_field 
+      #+ Interaction_Cmarket_Effe + Interaction_Cmarket_Effi + Interaction_Cmarket_Equi + Interaction_Cmarket_Feas
++ second_order_belief_1 + climate_worry + research_experience_1+ gender + politics+GEM_AGrowth+GEM_DGrowth + continent
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+
+
+
+print("importance_Asub")
+m_change <- polr(importance_Asub ~ #criteria_1 +criteria_2 +criteria_3 +criteria_4 
+                 #+effectiveness_4 + efficiency_4 + equity_4 + feasible_4 + #+ Primary_research_field 
+   #+ Interaction_Asub_Effe + Interaction_Asub_Effi + Interaction_Asub_Equi + Interaction_Asub_Feas
++ second_order_belief_1 + climate_worry + research_experience_1+ gender + politics+GEM_AGrowth+GEM_DGrowth+continent
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+
+
+print("importance_Inns")
+m_change <- polr(importance_Inns ~ #criteria_1 +criteria_2 +criteria_3 +criteria_4 
+                # +effectiveness_5 + efficiency_5 + equity_5 + feasible_5 + #+ Primary_research_field 
+    #+ Interaction_Inns_Effe + Interaction_Inns_Effi + Interaction_Inns_Equi + Interaction_Inns_Feas
+ + second_order_belief_1 + climate_worry + research_experience_1+ gender + politics+GEM_AGrowth+GEM_DGrowth+continent
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+
+
+
+print("importance_Infp")
+m_change <- polr(importance_Infp ~ #criteria_1 +criteria_2 +criteria_3 +criteria_4 
+               #  +effectiveness_6 + efficiency_6 + equity_6 + feasible_6 + #+ Primary_research_field 
+#+ Interaction_Infp_Effe + Interaction_Infp_Effi + Interaction_Infp_Equi + Interaction_Infp_Feas
+ + second_order_belief_1 + climate_worry + research_experience_1+ gender + politics+GEM_AGrowth+GEM_DGrowth+continent
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+
+
+
+print("importance_Dreg")
+m_change <- polr(importance_Dreg ~  GEM_AGrowth+GEM_DGrowth
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+car::vif(m_change)
+
+print("importance_Ctax")
+m_change <- polr(importance_Ctax ~ GEM_AGrowth+GEM_DGrowth
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+car::vif(m_change)
+
+print("importance_Cmarket")
+m_change <- polr(importance_Cmarket ~ GEM_AGrowth+GEM_DGrowth
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+car::vif(m_change)
+
+print("importance_Asub")
+m_change <- polr(importance_Asub ~ GEM_AGrowth+GEM_DGrowth
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+car::vif(m_change)
+
+print("importance_Inns")
+m_change <- polr(importance_Inns ~ GEM_AGrowth+GEM_DGrowth
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+car::vif(m_change)
+
+print("importance_Infp")
+m_change <- polr(importance_Infp ~ GEM_AGrowth+GEM_DGrowth
+                 , data = data, Hess=TRUE)
+#summary(m_change)
+ctable <- coef(summary(m_change))
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+(ctable <- cbind(ctable, "p value" = p))
+ci <- confint(m_change)
+#exp(coef(m_change))
+## OR and CI
+exp(cbind(OR = coef(m_change), ci))
+PseudoR2(m_change,which="Nagelkerke")
+car::vif(m_change)
+
+write.csv(data,'data for Lewis.csv', col.names=T)
+```
+
